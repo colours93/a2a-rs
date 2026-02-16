@@ -432,6 +432,8 @@ All types match the [protobuf definitions](https://github.com/a2aproject/A2A/blo
 | `tasks/resubscribe` | Resubscribe to task updates | ✅ SSE |
 | `tasks/pushNotificationConfig/set` | Set push notification config | ❌ |
 | `tasks/pushNotificationConfig/get` | Get push notification config | ❌ |
+| `tasks/pushNotificationConfig/list` | List push notification configs | ❌ |
+| `tasks/pushNotificationConfig/delete` | Delete push notification config | ❌ |
 
 ### Error Codes
 
