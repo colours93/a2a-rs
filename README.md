@@ -45,7 +45,7 @@ graph TB
     end
 
     subgraph Protocol["📡 A2A Protocol v0.3"]
-        Methods["message/send\nmessage/stream\ntasks/get\ntasks/list\ntasks/cancel\ntasks/subscribe"]
+        Methods["message/send\nmessage/stream\ntasks/get\ntasks/list\ntasks/cancel\ntasks/resubscribe"]
     end
 
     A2AClient --> CardResolver
@@ -77,6 +77,7 @@ stateDiagram-v2
     Working --> Completed: success
     Working --> Failed: error
     Working --> Canceled: tasks/cancel
+    Working --> Rejected: agent rejects
     Working --> InputRequired: needs user input
     Working --> AuthRequired: needs auth
     InputRequired --> Working: user responds
@@ -84,6 +85,7 @@ stateDiagram-v2
     Completed --> [*]
     Failed --> [*]
     Canceled --> [*]
+    Rejected --> [*]
 ```
 
 ## Request Flow
@@ -106,10 +108,10 @@ sequenceDiagram
     H->>E: execute(context, queue)
     E->>Q: status_update(Working)
     Q-->>C: SSE event (if streaming)
-    E->>Q: complete("Response")
+    E->>Q: complete_with_text("Response")
     Q-->>C: SSE event (if streaming)
     H->>S: persist task
-    H-->>C: Task (JSON-RPC response)
+    H-->>C: Task or Message (JSON-RPC response)
 ```
 
 ## Installation
@@ -143,13 +145,21 @@ a2a-rs = { version = "0.1", default-features = false, features = ["server"] }
 
 ```rust
 use a2a_rs::client::A2AClient;
+use a2a_rs::types::SendMessageResponse;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = A2AClient::from_url("http://localhost:7420").await?;
 
-    let task = client.send_text("Write a haiku about Rust").await?;
-    println!("Task: {} — {:?}", task.id, task.status.state);
+    let response = client.send_text("Write a haiku about Rust").await?;
+    match response {
+        SendMessageResponse::Task(task) => {
+            println!("Task: {} — {:?}", task.id, task.status.state);
+        }
+        SendMessageResponse::Message(msg) => {
+            println!("Message: {}", msg.message_id);
+        }
+    }
 
     Ok(())
 }
@@ -158,13 +168,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ### Stream Responses
 
 ```rust
+use a2a_rs::types::StreamResponse;
+use futures::StreamExt;
+
 let mut stream = client.send_text_stream("Tell me a story").await?;
 
 while let Some(event) = stream.next().await {
     match event? {
         StreamResponse::StatusUpdate(u) => println!("Status: {:?}", u.status.state),
         StreamResponse::ArtifactUpdate(a) => println!("Artifact: {:?}", a.artifact.name),
-        _ => {}
+        StreamResponse::Task(t) => println!("Final task: {:?}", t.status.state),
+        StreamResponse::Message(m) => println!("Message: {}", m.message_id),
     }
 }
 ```
@@ -172,34 +186,39 @@ while let Some(event) = stream.next().await {
 ### Multi-Turn Conversations
 
 ```rust
+use uuid::Uuid;
+
 let context_id = Uuid::new_v4().to_string();
 
 // First message
-let task1 = client.send_text_in_context("My name is Alice", &context_id).await?;
+let resp1 = client.send_text_in_context("My name is Alice", &context_id).await?;
 
 // Follow-up in the same context
-let task2 = client.send_text_in_context("What's my name?", &context_id).await?;
+let resp2 = client.send_text_in_context("What's my name?", &context_id).await?;
 ```
 
 ### Task Management
 
 ```rust
-// Get a task
-let task = client.get_task("task-123", None).await?;
+use a2a_rs::types::{GetTaskParams, ListTasksParams, TaskState};
+
+// Get a task by ID (convenience method)
+let task = client.get_task_by_id("task-123", None).await?;
 
 // List tasks with filtering
-let tasks = client.list_tasks(ListTasksParams {
+let response = client.list_tasks(ListTasksParams {
     context_id: Some("ctx-456".into()),
-    status: Some(vec![TaskState::Completed]),
+    status: Some(TaskState::Completed),
     page_size: Some(10),
     page_token: None,
+    history_length: None,
 }).await?;
 
-// Cancel a task
-client.cancel_task("task-789").await?;
+// Cancel a task by ID (convenience method)
+let canceled = client.cancel_task_by_id("task-789").await?;
 
-// Subscribe to live updates
-let mut updates = client.subscribe("task-123").await?;
+// Resubscribe to live task updates
+let mut updates = client.resubscribe_by_id("task-123").await?;
 while let Some(event) = updates.next().await {
     println!("{:?}", event?);
 }
@@ -231,14 +250,15 @@ impl AgentExecutor for EchoAgent {
             context.context_id.clone(),
         );
 
-        let text = context.message.parts.iter()
-            .find_map(|p| match p {
+        // Extract text from the incoming message (Option<Message>)
+        let text = context.message.as_ref()
+            .and_then(|msg| msg.parts.iter().find_map(|p| match p {
                 Part::Text { text, .. } => Some(text.clone()),
                 _ => None,
-            })
+            }))
             .unwrap_or_else(|| "…".to_string());
 
-        updater.complete(Some(&format!("Echo: {text}"))).await?;
+        updater.complete_with_text(&format!("Echo: {text}")).await?;
         Ok(())
     }
 
@@ -263,11 +283,9 @@ use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let card = AgentCardBuilder::new("Echo Agent")
-        .description("Echoes messages back")
-        .version("1.0.0")
-        .url("http://localhost:3000/a2a")
-        .skill("echo", "Echo", "Echoes your message", &["demo"])
+    let card = AgentCardBuilder::new("Echo Agent", "Echoes messages back", "1.0.0")
+        .with_jsonrpc_interface("http://localhost:3000/a2a")
+        .with_skill("echo", "Echo", "Echoes your message", vec!["demo".to_string()])
         .build();
 
     let handler = Arc::new(DefaultRequestHandler::new(
@@ -299,7 +317,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 %%{init: {'theme': 'dark', 'themeVariables': {'primaryColor': '#bb86fc', 'primaryTextColor': '#fff', 'primaryBorderColor': '#bb86fc', 'lineColor': '#03dac6', 'secondaryColor': '#121212', 'tertiaryColor': '#1e1e1e', 'clusterBkg': '#1e1e1e', 'clusterBorder': '#333'}}}%%
 graph LR
     subgraph crate["a2a_rs"]
-        types["types\n─────\nAgentCard\nTask\nMessage\nPart\nArtifact\nStreamResponse"]
+        types["types\n─────\nAgentCard\nTask · TaskState\nMessage · Part\nArtifact\nStreamResponse\nSendMessageResponse"]
         builders["builders\n─────\nAgentCardBuilder\nClientBuilder\nServerBuilder"]
         error["error\n─────\nA2AError\nA2AResult"]
 
@@ -312,10 +330,11 @@ graph LR
 
         subgraph server_mod["server"]
             executor["AgentExecutor trait"]
-            handler["RequestHandler trait"]
-            store["TaskStore trait"]
+            handler["RequestHandler trait\nDefaultRequestHandler"]
+            store["TaskStore trait\nInMemoryTaskStore"]
             updater["TaskUpdater"]
             queue["EventQueue"]
+            ctx["RequestContext\nServerCallContext"]
             axum_int["axum integration"]
         end
 
@@ -325,6 +344,7 @@ graph LR
             u_parts["parts"]
             u_artifact["artifact"]
             u_ext["extensions"]
+            u_const["constants"]
         end
     end
 
@@ -404,12 +424,14 @@ All types match the [protobuf definitions](https://github.com/a2aproject/A2A/blo
 
 | Method | Description | Streaming |
 |--------|-------------|:---------:|
-| `message/send` | Send a message, get a task back | ❌ |
+| `message/send` | Send a message, get a task or message back | ❌ |
 | `message/stream` | Send a message, stream updates | ✅ SSE |
 | `tasks/get` | Retrieve task by ID | ❌ |
 | `tasks/list` | List/filter tasks | ❌ |
 | `tasks/cancel` | Cancel a running task | ❌ |
-| `tasks/subscribe` | Subscribe to task updates | ✅ SSE |
+| `tasks/resubscribe` | Resubscribe to task updates | ✅ SSE |
+| `tasks/pushNotificationConfig/set` | Set push notification config | ❌ |
+| `tasks/pushNotificationConfig/get` | Get push notification config | ❌ |
 
 ### Error Codes
 
@@ -420,6 +442,8 @@ All types match the [protobuf definitions](https://github.com/a2aproject/A2A/blo
 | `-32003` | PushNotificationNotSupportedError |
 | `-32004` | UnsupportedOperationError |
 | `-32005` | ContentTypeNotSupportedError |
+| `-32006` | InvalidAgentResponseError |
+| `-32007` | AuthenticatedExtendedCardNotConfiguredError |
 | `-32600` to `-32700` | Standard JSON-RPC errors |
 
 ---
