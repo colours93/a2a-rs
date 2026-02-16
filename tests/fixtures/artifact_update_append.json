@@ -1,0 +1,16 @@
+{
+  "append": true,
+  "artifact": {
+    "artifactId": "streaming-art",
+    "parts": [
+      {
+        "kind": "text",
+        "text": "...more content..."
+      }
+    ]
+  },
+  "contextId": "c1",
+  "kind": "artifact-update",
+  "lastChunk": false,
+  "taskId": "t1"
+}

@@ -1,0 +1,21 @@
+{
+  "configuration": {
+    "acceptedOutputModes": [
+      "text/plain",
+      "application/json"
+    ],
+    "blocking": true,
+    "historyLength": 10
+  },
+  "message": {
+    "kind": "message",
+    "messageId": "m1",
+    "parts": [
+      {
+        "kind": "text",
+        "text": "Hello"
+      }
+    ],
+    "role": "user"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "description": "HTTP Basic authentication",
+  "scheme": "basic",
+  "type": "http"
+}

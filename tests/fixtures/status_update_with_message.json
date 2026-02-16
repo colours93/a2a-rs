@@ -1,0 +1,21 @@
+{
+  "contextId": "c1",
+  "final": false,
+  "kind": "status-update",
+  "status": {
+    "message": {
+      "kind": "message",
+      "messageId": "m-prompt",
+      "parts": [
+        {
+          "kind": "text",
+          "text": "I need more information"
+        }
+      ],
+      "role": "agent"
+    },
+    "state": "input-required",
+    "timestamp": "2024-06-15T14:30:00Z"
+  },
+  "taskId": "t1"
+}

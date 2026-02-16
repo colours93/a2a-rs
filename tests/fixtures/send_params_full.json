@@ -1,0 +1,54 @@
+{
+  "configuration": {
+    "acceptedOutputModes": [
+      "text/plain",
+      "application/json",
+      "image/png"
+    ],
+    "blocking": false,
+    "historyLength": 20,
+    "pushNotificationConfig": {
+      "authentication": {
+        "credentials": "webhook-secret",
+        "schemes": [
+          "Bearer"
+        ]
+      },
+      "url": "https://hooks.example.com/updates"
+    }
+  },
+  "message": {
+    "contextId": "ctx-existing",
+    "extensions": [
+      "urn:a2a:ext:streaming"
+    ],
+    "kind": "message",
+    "messageId": "m-full",
+    "metadata": {
+      "priority": "high",
+      "source": "api"
+    },
+    "parts": [
+      {
+        "kind": "text",
+        "text": "Process this file"
+      },
+      {
+        "file": {
+          "mimeType": "application/json",
+          "uri": "https://example.com/input.json"
+        },
+        "kind": "file"
+      }
+    ],
+    "referenceTaskIds": [
+      "task-prev-1",
+      "task-prev-2"
+    ],
+    "role": "user",
+    "taskId": "task-existing"
+  },
+  "metadata": {
+    "request_id": "req-123"
+  }
+}

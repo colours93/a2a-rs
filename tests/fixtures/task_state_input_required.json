@@ -1,0 +1,19 @@
+{
+  "contextId": "ctx-states",
+  "id": "task-input-required",
+  "kind": "task",
+  "status": {
+    "message": {
+      "kind": "message",
+      "messageId": "m-ir",
+      "parts": [
+        {
+          "kind": "text",
+          "text": "Please provide your API key"
+        }
+      ],
+      "role": "agent"
+    },
+    "state": "input-required"
+  }
+}

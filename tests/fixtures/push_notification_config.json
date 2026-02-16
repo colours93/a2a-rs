@@ -1,0 +1,11 @@
+{
+  "authentication": {
+    "credentials": "secret-token",
+    "schemes": [
+      "Bearer"
+    ]
+  },
+  "id": "pn-1",
+  "token": "verify-token-123",
+  "url": "https://hooks.example.com/notify"
+}

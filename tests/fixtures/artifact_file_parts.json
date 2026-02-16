@@ -1,0 +1,21 @@
+{
+  "artifactId": "art-files",
+  "name": "code_and_image",
+  "parts": [
+    {
+      "file": {
+        "bytes": "cHl0aG9u",
+        "mimeType": "text/x-python",
+        "name": "script.py"
+      },
+      "kind": "file"
+    },
+    {
+      "file": {
+        "mimeType": "image/png",
+        "uri": "https://cdn.example.com/image.png"
+      },
+      "kind": "file"
+    }
+  ]
+}

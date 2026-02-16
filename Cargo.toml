@@ -1,0 +1,79 @@
+[package]
+name = "a2a-rs"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+authors = ["colours93"]
+description = "Rust SDK for the Agent-to-Agent (A2A) protocol v0.3"
+license = "MIT"
+repository = "https://github.com/colours93/a2a-rs"
+readme = "README.md"
+keywords = ["a2a", "agent", "protocol", "json-rpc", "ai"]
+categories = ["api-bindings", "network-programming"]
+documentation = "https://docs.rs/a2a-rs"
+
+[dependencies]
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Async
+tokio = { version = "1", features = ["sync", "time", "macros", "rt"] }
+async-trait = "0.1"
+futures = "0.3"
+
+# HTTP client + SSE
+reqwest = { version = "0.12", features = ["json", "stream"], optional = true }
+reqwest-eventsource = { version = "0.6", optional = true }
+
+# HTTP server (axum integration)
+axum = { version = "0.8", features = ["ws"], optional = true }
+tower = { version = "0.5", optional = true }
+tower-http = { version = "0.6", features = ["cors"], optional = true }
+async-stream = { version = "0.3", optional = true }
+
+# Utilities
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+tracing = "0.1"
+thiserror = "2"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["full"] }
+serde_json = "1"
+axum = { version = "0.8", features = ["ws"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors"] }
+reqwest = { version = "0.12", features = ["json", "stream"] }
+async-trait = "0.1"
+async-stream = "0.3"
+tracing-subscriber = "0.3"
+
+[[example]]
+name = "echo_agent"
+required-features = ["server"]
+
+[[example]]
+name = "hello_client"
+required-features = ["client"]
+
+[[example]]
+name = "streaming_client"
+required-features = ["client"]
+
+[[example]]
+name = "multi_turn"
+required-features = ["client"]
+
+[features]
+## Default: both client and server
+default = ["client", "server"]
+
+## Client: HTTP client for calling A2A agents (reqwest + SSE streaming)
+client = ["dep:reqwest", "dep:reqwest-eventsource"]
+
+## Server: Server traits and axum integration for building A2A agents
+server = ["dep:axum", "dep:tower", "dep:tower-http", "dep:async-stream"]
+
+## Full: all features enabled
+full = ["client", "server"]

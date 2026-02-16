@@ -1,0 +1,11 @@
+[
+  "submitted",
+  "working",
+  "input-required",
+  "completed",
+  "canceled",
+  "failed",
+  "rejected",
+  "auth-required",
+  "unknown"
+]

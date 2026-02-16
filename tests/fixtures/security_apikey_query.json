@@ -1,0 +1,6 @@
+{
+  "description": "API key passed as query parameter",
+  "in": "query",
+  "name": "api_key",
+  "type": "apiKey"
+}

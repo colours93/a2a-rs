@@ -1,0 +1,27 @@
+{
+  "data": {
+    "array": [
+      1,
+      "two",
+      3.0,
+      true,
+      null,
+      {
+        "nested": "obj"
+      }
+    ],
+    "empty_array": [],
+    "empty_obj": {},
+    "nested": {
+      "deep": {
+        "deeper": {
+          "deepest": "value"
+        }
+      }
+    }
+  },
+  "kind": "data",
+  "metadata": {
+    "schema_version": 2
+  }
+}

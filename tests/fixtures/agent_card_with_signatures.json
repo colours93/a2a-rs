@@ -1,0 +1,34 @@
+{
+  "capabilities": {},
+  "defaultInputModes": [
+    "text/plain"
+  ],
+  "defaultOutputModes": [
+    "text/plain"
+  ],
+  "description": "Agent with JWS signatures",
+  "name": "Signed Agent",
+  "preferredTransport": "JSONRPC",
+  "protocolVersion": "0.3.0",
+  "signatures": [
+    {
+      "header": {
+        "kid": "key-001"
+      },
+      "protected": "eyJhbGciOiJSUzI1NiJ9",
+      "signature": "dGVzdC1zaWduYXR1cmU"
+    }
+  ],
+  "skills": [
+    {
+      "description": "A skill",
+      "id": "s1",
+      "name": "Skill",
+      "tags": [
+        "test"
+      ]
+    }
+  ],
+  "url": "https://signed.example.com",
+  "version": "1.0.0"
+}

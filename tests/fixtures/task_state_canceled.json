@@ -1,0 +1,8 @@
+{
+  "contextId": "ctx-states",
+  "id": "task-canceled",
+  "kind": "task",
+  "status": {
+    "state": "canceled"
+  }
+}

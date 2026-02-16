@@ -1,0 +1,4 @@
+{
+  "openIdConnectUrl": "https://auth.example.com/.well-known/openid-configuration",
+  "type": "openIdConnect"
+}

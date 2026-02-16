@@ -1,0 +1,48 @@
+{
+  "capabilities": {
+    "extensions": [
+      {
+        "description": "Custom extension",
+        "params": {
+          "maxTokens": 4096
+        },
+        "required": true,
+        "uri": "urn:a2a:ext:custom"
+      }
+    ],
+    "pushNotifications": true,
+    "streaming": true
+  },
+  "defaultInputModes": [
+    "text/plain"
+  ],
+  "defaultOutputModes": [
+    "text/plain"
+  ],
+  "description": "Agent with protocol extensions",
+  "name": "Extended Agent",
+  "preferredTransport": "JSONRPC",
+  "protocolVersion": "0.3.0",
+  "skills": [
+    {
+      "description": "Uses extensions",
+      "examples": [
+        "Do extended thing"
+      ],
+      "id": "ext-skill",
+      "inputModes": [
+        "text/plain",
+        "image/png"
+      ],
+      "name": "Extended Skill",
+      "outputModes": [
+        "application/json"
+      ],
+      "tags": [
+        "extended"
+      ]
+    }
+  ],
+  "url": "https://extended.example.com",
+  "version": "1.0.0"
+}

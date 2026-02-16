@@ -1,0 +1,22 @@
+{
+  "contextId": "ctx-1",
+  "extensions": [
+    "urn:a2a:ext:streaming"
+  ],
+  "kind": "message",
+  "messageId": "msg-002",
+  "metadata": {
+    "model": "gpt-4"
+  },
+  "parts": [
+    {
+      "kind": "text",
+      "text": "Response"
+    }
+  ],
+  "referenceTaskIds": [
+    "task-0"
+  ],
+  "role": "agent",
+  "taskId": "task-1"
+}

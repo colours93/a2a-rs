@@ -1,0 +1,8 @@
+{
+  "contextId": "ctx-states",
+  "id": "task-failed",
+  "kind": "task",
+  "status": {
+    "state": "failed"
+  }
+}

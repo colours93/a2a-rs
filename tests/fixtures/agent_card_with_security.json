@@ -1,0 +1,52 @@
+{
+  "capabilities": {
+    "streaming": true
+  },
+  "defaultInputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "text/plain"
+  ],
+  "description": "An agent with security",
+  "name": "Secure Agent",
+  "preferredTransport": "JSONRPC",
+  "protocolVersion": "0.3.0",
+  "provider": {
+    "organization": "SecureCorp",
+    "url": "https://securecorp.example.com"
+  },
+  "security": [
+    {
+      "bearer": []
+    },
+    {
+      "apikey": []
+    }
+  ],
+  "securitySchemes": {
+    "apikey": {
+      "in": "header",
+      "name": "X-API-Key",
+      "type": "apiKey"
+    },
+    "bearer": {
+      "bearerFormat": "JWT",
+      "scheme": "bearer",
+      "type": "http"
+    }
+  },
+  "skills": [
+    {
+      "description": "Does secure things",
+      "id": "secure-op",
+      "name": "Secure Operation",
+      "tags": [
+        "security"
+      ]
+    }
+  ],
+  "url": "https://secure-agent.example.com",
+  "version": "2.0.0"
+}

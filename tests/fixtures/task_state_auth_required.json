@@ -1,0 +1,8 @@
+{
+  "contextId": "ctx-states",
+  "id": "task-auth-required",
+  "kind": "task",
+  "status": {
+    "state": "auth-required"
+  }
+}

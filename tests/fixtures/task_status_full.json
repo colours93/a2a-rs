@@ -1,0 +1,15 @@
+{
+  "message": {
+    "kind": "message",
+    "messageId": "m1",
+    "parts": [
+      {
+        "kind": "text",
+        "text": "Done!"
+      }
+    ],
+    "role": "agent"
+  },
+  "state": "completed",
+  "timestamp": "2024-01-15T10:30:00Z"
+}

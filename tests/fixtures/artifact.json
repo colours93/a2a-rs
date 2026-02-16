@@ -1,0 +1,20 @@
+{
+  "artifactId": "art-001",
+  "description": "Generated code",
+  "extensions": [
+    "urn:a2a:ext:code"
+  ],
+  "name": "code_output",
+  "parts": [
+    {
+      "kind": "text",
+      "text": "fn main() {}"
+    },
+    {
+      "data": {
+        "language": "rust"
+      },
+      "kind": "data"
+    }
+  ]
+}

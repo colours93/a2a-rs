@@ -1,0 +1,13 @@
+{
+  "description": "Service-to-service auth",
+  "flows": {
+    "clientCredentials": {
+      "scopes": {
+        "api:read": "Read API",
+        "api:write": "Write API"
+      },
+      "tokenUrl": "https://auth.example.com/oauth/token"
+    }
+  },
+  "type": "oauth2"
+}

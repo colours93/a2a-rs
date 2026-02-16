@@ -1,0 +1,9 @@
+{
+  "contextId": "ctx-001",
+  "final": false,
+  "kind": "status-update",
+  "status": {
+    "state": "working"
+  },
+  "taskId": "task-001"
+}

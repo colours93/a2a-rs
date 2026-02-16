@@ -1,0 +1,10 @@
+{
+  "artifacts": [],
+  "contextId": "ctx-empty",
+  "history": [],
+  "id": "task-empty",
+  "kind": "task",
+  "status": {
+    "state": "submitted"
+  }
+}

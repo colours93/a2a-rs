@@ -1,0 +1,25 @@
+{
+  "capabilities": {},
+  "defaultInputModes": [
+    "text/plain"
+  ],
+  "defaultOutputModes": [
+    "text/plain"
+  ],
+  "description": "A test agent",
+  "name": "Test Agent",
+  "preferredTransport": "JSONRPC",
+  "protocolVersion": "0.3.0",
+  "skills": [
+    {
+      "description": "Echoes input",
+      "id": "echo",
+      "name": "Echo",
+      "tags": [
+        "utility"
+      ]
+    }
+  ],
+  "url": "https://agent.example.com",
+  "version": "1.0.0"
+}

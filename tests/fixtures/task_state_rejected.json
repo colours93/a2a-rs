@@ -1,0 +1,8 @@
+{
+  "contextId": "ctx-states",
+  "id": "task-rejected",
+  "kind": "task",
+  "status": {
+    "state": "rejected"
+  }
+}

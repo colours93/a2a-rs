@@ -1,0 +1,8 @@
+{
+  "contextId": "ctx-001",
+  "id": "task-001",
+  "kind": "task",
+  "status": {
+    "state": "submitted"
+  }
+}

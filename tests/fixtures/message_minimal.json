@@ -1,0 +1,11 @@
+{
+  "kind": "message",
+  "messageId": "msg-001",
+  "parts": [
+    {
+      "kind": "text",
+      "text": "Hello agent"
+    }
+  ],
+  "role": "user"
+}

@@ -1,0 +1,6 @@
+{
+  "pushNotificationConfig": {
+    "url": "https://hooks.example.com/notify"
+  },
+  "taskId": "task-001"
+}

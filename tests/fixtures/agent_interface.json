@@ -1,0 +1,4 @@
+{
+  "transport": "JSONRPC",
+  "url": "https://api.example.com/a2a"
+}

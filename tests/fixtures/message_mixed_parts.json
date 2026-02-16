@@ -1,0 +1,38 @@
+{
+  "kind": "message",
+  "messageId": "msg-mixed",
+  "metadata": {
+    "turn": 3
+  },
+  "parts": [
+    {
+      "kind": "text",
+      "text": "Here's the file:"
+    },
+    {
+      "file": {
+        "bytes": "AQID",
+        "mimeType": "application/octet-stream"
+      },
+      "kind": "file"
+    },
+    {
+      "file": {
+        "mimeType": "text/csv",
+        "name": "data.csv",
+        "uri": "https://example.com/data.csv"
+      },
+      "kind": "file"
+    },
+    {
+      "data": {
+        "summary": {
+          "passed": 95,
+          "total": 100
+        }
+      },
+      "kind": "data"
+    }
+  ],
+  "role": "agent"
+}

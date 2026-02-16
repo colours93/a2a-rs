@@ -1,0 +1,4 @@
+{
+  "transport": "GRPC",
+  "url": "https://grpc.example.com/a2a"
+}

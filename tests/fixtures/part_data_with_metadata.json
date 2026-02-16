@@ -1,0 +1,13 @@
+{
+  "data": {
+    "items": [
+      1,
+      2,
+      3
+    ]
+  },
+  "kind": "data",
+  "metadata": {
+    "schema": "v1"
+  }
+}

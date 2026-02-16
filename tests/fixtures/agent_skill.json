@@ -1,0 +1,20 @@
+{
+  "description": "Generates code in various languages",
+  "examples": [
+    "Write a function",
+    "Generate a class"
+  ],
+  "id": "code-gen",
+  "inputModes": [
+    "text/plain"
+  ],
+  "name": "Code Generation",
+  "outputModes": [
+    "text/plain",
+    "application/json"
+  ],
+  "tags": [
+    "coding",
+    "generation"
+  ]
+}

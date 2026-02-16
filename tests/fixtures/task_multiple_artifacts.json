@@ -1,0 +1,57 @@
+{
+  "artifacts": [
+    {
+      "artifactId": "a1",
+      "parts": [
+        {
+          "kind": "text",
+          "text": "First output"
+        }
+      ]
+    },
+    {
+      "artifactId": "a2",
+      "parts": [
+        {
+          "data": {
+            "result": 42
+          },
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "artifactId": "a3",
+      "description": "All results combined",
+      "extensions": [
+        "urn:ext:v1"
+      ],
+      "metadata": {
+        "format": "combined"
+      },
+      "name": "combined",
+      "parts": [
+        {
+          "kind": "text",
+          "text": "Summary"
+        },
+        {
+          "data": {
+            "items": [
+              1,
+              2,
+              3
+            ]
+          },
+          "kind": "data"
+        }
+      ]
+    }
+  ],
+  "contextId": "ctx-multi",
+  "id": "task-multi-art",
+  "kind": "task",
+  "status": {
+    "state": "completed"
+  }
+}

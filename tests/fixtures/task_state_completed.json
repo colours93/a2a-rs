@@ -1,0 +1,8 @@
+{
+  "contextId": "ctx-states",
+  "id": "task-completed",
+  "kind": "task",
+  "status": {
+    "state": "completed"
+  }
+}

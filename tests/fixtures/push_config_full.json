@@ -1,0 +1,12 @@
+{
+  "authentication": {
+    "credentials": "multi-scheme-token",
+    "schemes": [
+      "Bearer",
+      "Basic"
+    ]
+  },
+  "id": "pn-full",
+  "token": "verify-me",
+  "url": "https://hooks.example.com/a2a"
+}
