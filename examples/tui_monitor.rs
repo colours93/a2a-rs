@@ -14,7 +14,7 @@
 //! ```
 //!
 //! Controls:
-//! - `q` or `Ctrl+C`: Quit
+//! - `q`, `Esc`, or `Ctrl+C`: Quit
 //! - `r`: Refresh (force reload)
 
 use anyhow::Result;
@@ -240,7 +240,7 @@ fn main() -> Result<()> {
     let tx_clone = tx.clone();
     let mut watcher = RecommendedWatcher::new(
         move |res| {
-            tx_clone.send(res).unwrap();
+            let _ = tx_clone.send(res); // Ignore send errors if receiver is dropped
         },
         Config::default(),
     )?;
