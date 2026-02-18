@@ -48,10 +48,21 @@ reqwest = { version = "0.12", features = ["json", "stream"] }
 async-trait = "0.1"
 async-stream = "0.3"
 tracing-subscriber = "0.3"
+ratatui = "0.29"
+crossterm = "0.28"
+notify = "7.0"
+anyhow = "1.0"
 
 [[example]]
 name = "echo_agent"
 required-features = ["server"]
+
+[[example]]
+name = "echo_agent_file"
+required-features = ["server"]
+
+[[example]]
+name = "tui_monitor"
 
 [[example]]
 name = "hello_client"
