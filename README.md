@@ -309,6 +309,54 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 | `/a2a` | `POST` | JSON-RPC 2.0 endpoint |
 | `/.well-known/agent.json` | `GET` | Agent card discovery |
 
+### Task Persistence
+
+The SDK provides two `TaskStore` implementations:
+
+- **`InMemoryTaskStore`** — Simple in-memory storage (default, data lost on restart)
+- **`FileTaskStore`** — Persists tasks as JSON files, enabling task visualization and debugging
+
+```rust
+use a2a_rs::server::FileTaskStore;
+use std::path::PathBuf;
+
+// Store tasks in ./tasks directory
+let store = FileTaskStore::new(PathBuf::from("./tasks")).await?;
+```
+
+Each task is saved as `{task_id}.json` in the specified directory, making it easy to:
+- Debug task state in real-time
+- Visualize tasks with the TUI monitor (see below)
+- Persist tasks across restarts
+- Integrate with external monitoring tools
+
+### TUI Task Monitor
+
+The SDK includes a terminal UI for visualizing tasks in real-time:
+
+```bash
+# Terminal 1: Start an agent with FileTaskStore
+cargo run --example echo_agent_file
+
+# Terminal 2: Monitor tasks with the TUI
+cargo run --example tui_monitor -- ./tasks
+```
+
+The TUI shows:
+- ✓ **Completed** tasks (green)
+- ⚙ **Working** tasks (cyan)
+- ⏸ **Submitted** tasks (yellow)
+- ✗ **Failed** tasks (red)
+- ⊗ **Canceled** tasks (gray)
+
+**Controls:**
+- `q` or `Esc` — Quit
+- `r` — Refresh
+- `Ctrl+C` — Quit
+
+The monitor uses `notify` to watch the task directory and automatically updates when tasks change.
+
+
 ---
 
 ## Module Map
@@ -331,7 +379,7 @@ graph LR
         subgraph server_mod["server"]
             executor["AgentExecutor trait"]
             handler["RequestHandler trait\nDefaultRequestHandler"]
-            store["TaskStore trait\nInMemoryTaskStore"]
+            store["TaskStore trait\nInMemoryTaskStore\nFileTaskStore"]
             updater["TaskUpdater"]
             queue["EventQueue"]
             ctx["RequestContext\nServerCallContext"]
@@ -453,8 +501,14 @@ All types match the [protobuf definitions](https://github.com/a2aproject/A2A/blo
 ## Examples
 
 ```bash
-# Run the echo agent server
+# Run the echo agent server (in-memory storage)
 cargo run --example echo_agent
+
+# Run the echo agent with file-based storage
+cargo run --example echo_agent_file
+
+# Monitor tasks with the TUI (requires echo_agent_file)
+cargo run --example tui_monitor -- ./tasks
 
 # Send a message from a client
 cargo run --example hello_client
