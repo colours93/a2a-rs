@@ -1,0 +1,60 @@
+{
+  "id": "ec83bdb4-ea8e-4512-b8e1-6dbe81240f88",
+  "contextId": "cd077dc9-28c9-469c-a419-f524f2aa8719",
+  "kind": "task",
+  "status": {
+    "state": "completed",
+    "message": {
+      "messageId": "02cb2775-8968-481e-880d-f5ea35104530",
+      "role": "agent",
+      "kind": "message",
+      "parts": [
+        {
+          "kind": "text",
+          "text": "Done!"
+        }
+      ],
+      "contextId": "cd077dc9-28c9-469c-a419-f524f2aa8719",
+      "taskId": "ec83bdb4-ea8e-4512-b8e1-6dbe81240f88"
+    },
+    "timestamp": "2026-02-18T11:51:18.284490297+00:00"
+  },
+  "artifacts": [
+    {
+      "artifactId": "579bae2a-f92b-4696-af93-0d315b029241",
+      "name": "echo-response",
+      "parts": [
+        {
+          "kind": "text",
+          "text": "Echo: Test message 4"
+        }
+      ]
+    }
+  ],
+  "history": [
+    {
+      "messageId": "m4",
+      "role": "user",
+      "kind": "message",
+      "parts": [
+        {
+          "kind": "text",
+          "text": "Test message 4"
+        }
+      ]
+    },
+    {
+      "messageId": "fba47e4c-7e1d-4842-a60f-b22bde1b8ee5",
+      "role": "agent",
+      "kind": "message",
+      "parts": [
+        {
+          "kind": "text",
+          "text": "Processing your message..."
+        }
+      ],
+      "contextId": "cd077dc9-28c9-469c-a419-f524f2aa8719",
+      "taskId": "ec83bdb4-ea8e-4512-b8e1-6dbe81240f88"
+    }
+  ]
+}
