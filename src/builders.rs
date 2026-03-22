@@ -87,7 +87,7 @@ impl AgentCardBuilder {
         let url_str = url.into();
         self.supported_interfaces.push(AgentInterface {
             url: url_str.clone(),
-            transport: "JSONRPC".to_string(),
+            protocol_binding: "JSONRPC".to_string(),
             tenant: None,
             protocol_version: Some("0.3".to_string()),
         });
@@ -480,7 +480,7 @@ mod tests {
         assert_eq!(card.description, "A test");
         assert_eq!(card.version, "1.0.0");
         assert_eq!(card.supported_interfaces.len(), 1);
-        assert_eq!(card.supported_interfaces[0].transport, "JSONRPC");
+        assert_eq!(card.supported_interfaces[0].protocol_binding, "JSONRPC");
     }
 
     #[test]

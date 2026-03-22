@@ -162,7 +162,7 @@ impl CardResolver {
     pub fn get_a2a_url(card: &AgentCard) -> Option<String> {
         card.supported_interfaces
             .iter()
-            .find(|iface| iface.transport.eq_ignore_ascii_case("JSONRPC"))
+            .find(|iface| iface.protocol_binding.eq_ignore_ascii_case("JSONRPC"))
             .map(|iface| iface.url.clone())
     }
 }

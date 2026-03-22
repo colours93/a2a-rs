@@ -164,52 +164,123 @@ impl JsonRpcResponse {
 
 /// Main JSON-RPC dispatch handler.
 ///
-/// Parses the incoming JSON-RPC request, routes to the appropriate handler
-/// method, and returns either a JSON response or an SSE stream.
+/// Accepts raw bytes to handle malformed JSON gracefully with HTTP 200 + JSON-RPC error
+/// (spec requires JSON-RPC errors as HTTP 200, not 4xx).
 ///
 /// Mirrors Python SDK's `_handle_requests` method routing.
 async fn handle_jsonrpc(
     State(state): State<Arc<AppState>>,
-    Json(request): Json<JsonRpcRequest>,
+    body: axum::body::Bytes,
 ) -> Response {
-    // Validate JSON-RPC version.
-    if request.jsonrpc != "2.0" {
-        return Json(JsonRpcResponse::error(
-            request.id,
-            error::INVALID_REQUEST,
-            "Invalid JSON-RPC version — must be \"2.0\"".to_string(),
-        ))
-        .into_response();
+    // Parse JSON first — return JSON-RPC parse error (not HTTP 422) for malformed input
+    let value: Value = match serde_json::from_slice(&body) {
+        Ok(v) => v,
+        Err(e) => {
+            return Json(JsonRpcResponse::error(
+                None,
+                error::PARSE_ERROR,
+                format!("Parse error: {}", e),
+            ))
+            .into_response();
+        }
+    };
+
+    // Validate it's an object
+    let obj = match value.as_object() {
+        Some(o) => o,
+        None => {
+            return Json(JsonRpcResponse::error(
+                None,
+                error::INVALID_REQUEST,
+                "Invalid Request: expected JSON object".to_string(),
+            ))
+            .into_response();
+        }
+    };
+
+    // Extract id (may be absent for notifications)
+    let id = obj.get("id").cloned();
+
+    // Validate jsonrpc field
+    match obj.get("jsonrpc").and_then(|v| v.as_str()) {
+        Some("2.0") => {}
+        Some(_) => {
+            return Json(JsonRpcResponse::error(
+                id,
+                error::INVALID_REQUEST,
+                "Invalid JSON-RPC version — must be \"2.0\"".to_string(),
+            ))
+            .into_response();
+        }
+        None => {
+            return Json(JsonRpcResponse::error(
+                id,
+                error::INVALID_REQUEST,
+                "Invalid Request: missing 'jsonrpc' field".to_string(),
+            ))
+            .into_response();
+        }
     }
+
+    // Validate method field
+    let method = match obj.get("method").and_then(|v| v.as_str()) {
+        Some(m) => m.to_string(),
+        None => {
+            return Json(JsonRpcResponse::error(
+                id,
+                error::INVALID_REQUEST,
+                "Invalid Request: missing or invalid 'method' field".to_string(),
+            ))
+            .into_response();
+        }
+    };
+
+    let params = obj.get("params").cloned().unwrap_or(Value::Object(Default::default()));
+
+    let request = JsonRpcRequest {
+        jsonrpc: "2.0".to_string(),
+        id,
+        method: method.clone(),
+        params,
+    };
 
     debug!(method = %request.method, "JSON-RPC request received");
 
-    match request.method.as_str() {
-        "message/send" => handle_message_send(state, request).await,
-        "message/stream" => handle_message_stream(state, request).await,
-        "tasks/get" => handle_tasks_get(state, request).await,
-        "tasks/list" => handle_tasks_list(state, request).await,
-        "tasks/cancel" => handle_tasks_cancel(state, request).await,
-        "tasks/subscribe" => handle_tasks_subscribe(state, request).await,
-        "tasks/resubscribe" => handle_tasks_resubscribe(state, request).await,
-        "tasks/pushNotificationConfig/set" => {
+    // Method dispatch — accept both spec names and common aliases
+    match method.as_str() {
+        "message/send" | "message:send" | "SendMessage" => {
+            handle_message_send(state, request).await
+        }
+        "message/stream" | "message:stream" | "SendStreamingMessage" => {
+            handle_message_stream(state, request).await
+        }
+        "tasks/get" | "tasks:get" | "GetTask" => handle_tasks_get(state, request).await,
+        "tasks/list" | "tasks:list" | "ListTasks" => handle_tasks_list(state, request).await,
+        "tasks/cancel" | "tasks:cancel" | "CancelTask" => {
+            handle_tasks_cancel(state, request).await
+        }
+        "tasks/subscribe" | "tasks:subscribe" | "SubscribeToTask" => {
+            handle_tasks_subscribe(state, request).await
+        }
+        "tasks/resubscribe" | "tasks:resubscribe" | "ResubscribeToTask" => {
+            handle_tasks_resubscribe(state, request).await
+        }
+        "tasks/pushNotificationConfig/set" | "SetTaskPushNotificationConfig" => {
             handle_push_notification_config_set(state, request).await
         }
-        "tasks/pushNotificationConfig/get" => {
+        "tasks/pushNotificationConfig/get" | "GetTaskPushNotificationConfig" => {
             handle_push_notification_config_get(state, request).await
         }
-        "tasks/pushNotificationConfig/list" => {
+        "tasks/pushNotificationConfig/list" | "ListTaskPushNotificationConfigs" => {
             handle_push_notification_config_list(state, request).await
         }
-        "tasks/pushNotificationConfig/delete" => {
+        "tasks/pushNotificationConfig/delete" | "DeleteTaskPushNotificationConfig" => {
             handle_push_notification_config_delete(state, request).await
         }
-        "agent/authenticatedExtendedCard" => {
-            // Return the agent card as the extended card.
-            // Mirrors Python SDK's get_authenticated_extended_card method.
+        "agent/authenticatedExtendedCard" | "GetExtendedAgentCard" => {
             handle_authenticated_extended_card(state, request).await
         }
-        method => {
+        _ => {
             warn!(method = %method, "Unknown JSON-RPC method");
             Json(JsonRpcResponse::error(
                 request.id,

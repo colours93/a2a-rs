@@ -66,7 +66,10 @@ impl fmt::Display for TaskState {
 /// official A2A proto specification (`enum Role`).
 ///
 /// Proto ref: `enum Role`
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+///
+/// Accepts both lowercase ("user") and protobuf-style ("ROLE_USER") on deserialize.
+/// Serializes as lowercase for JSON compat.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Role {
     /// Message from the user / client.
@@ -75,6 +78,21 @@ pub enum Role {
     Agent,
     /// Unspecified role.
     Unspecified,
+}
+
+impl<'de> serde::Deserialize<'de> for Role {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        match s.as_str() {
+            "user" | "User" | "ROLE_USER" => Ok(Role::User),
+            "agent" | "Agent" | "ROLE_AGENT" => Ok(Role::Agent),
+            "unspecified" | "Unspecified" | "ROLE_UNSPECIFIED" => Ok(Role::Unspecified),
+            _ => Err(serde::de::Error::custom(format!("unknown role: {}", s))),
+        }
+    }
 }
 
 impl fmt::Display for Role {
@@ -258,7 +276,11 @@ pub enum FileContent {
 /// - Data: `{"kind": "data", "data": {"key": "value"}}`
 ///
 /// Python SDK ref: `Part`, `TextPart`, `FilePart`, `DataPart`
-#[derive(Debug, Clone, Serialize, Deserialize)]
+///
+/// Accepts both tagged (`{"kind": "text", "text": "..."}`) and untagged
+/// (`{"text": "..."}`) formats for spec/SDK/protobuf compat.
+/// Serializes with `kind` tag for Python SDK compat.
+#[derive(Debug, Clone, Serialize)]
 #[serde(tag = "kind")]
 pub enum Part {
     /// A text content part. Discriminator: `"text"`.
@@ -288,6 +310,59 @@ pub enum Part {
         #[serde(skip_serializing_if = "Option::is_none")]
         metadata: Option<serde_json::Value>,
     },
+}
+
+impl<'de> serde::Deserialize<'de> for Part {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let value = serde_json::Value::deserialize(deserializer)?;
+        let obj = value
+            .as_object()
+            .ok_or_else(|| serde::de::Error::custom("Part must be an object"))?;
+
+        // Determine variant: check "kind" tag first, then infer from fields
+        let kind = obj
+            .get("kind")
+            .and_then(|v| v.as_str())
+            .map(String::from);
+
+        match kind.as_deref() {
+            Some("text") | None if obj.contains_key("text") => {
+                let text = obj
+                    .get("text")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("")
+                    .to_string();
+                let metadata = obj.get("metadata").cloned();
+                Ok(Part::Text { text, metadata })
+            }
+            Some("file") | None if obj.contains_key("file") => {
+                let file: FileContent = serde_json::from_value(
+                    obj.get("file").cloned().unwrap_or(serde_json::Value::Null),
+                )
+                .map_err(serde::de::Error::custom)?;
+                let metadata = obj.get("metadata").cloned();
+                Ok(Part::File { file, metadata })
+            }
+            Some("data") | None if obj.contains_key("data") => {
+                let data = obj
+                    .get("data")
+                    .cloned()
+                    .unwrap_or(serde_json::Value::Null);
+                let metadata = obj.get("metadata").cloned();
+                Ok(Part::Data { data, metadata })
+            }
+            Some(other) => Err(serde::de::Error::custom(format!(
+                "unknown Part kind: {}",
+                other
+            ))),
+            None => Err(serde::de::Error::custom(
+                "Part must have 'kind' field or a recognized content field (text, file, data)",
+            )),
+        }
+    }
 }
 
 /// Legacy type alias — `TextPart` is now an inline variant of [`Part::Text`].
@@ -612,7 +687,8 @@ pub struct AgentCard {
 
 /// A transport interface supported by an agent.
 ///
-/// Python SDK ref: `AgentInterface` — uses `transport: str`, NOT `protocolBinding`.
+/// Spec v0.3.0 uses `protocolBinding`; Python SDK uses `transport`.
+/// We serialize as `protocolBinding` (spec-compliant) and accept both on deserialize.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AgentInterface {
@@ -621,9 +697,10 @@ pub struct AgentInterface {
 
     /// Transport protocol (e.g. "JSONRPC", "HTTP+JSON", "GRPC").
     ///
-    /// Python SDK: `transport: str`
-    /// JSON: `"transport"`.
-    pub transport: String,
+    /// Serialized as `"protocolBinding"` (spec v0.3.0).
+    /// Accepts `"transport"` on deserialize for Python SDK compat.
+    #[serde(alias = "transport")]
+    pub protocol_binding: String,
 
     /// Optional tenant identifier.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2050,7 +2127,7 @@ mod tests {
             url: "http://localhost:8080/a2a".to_string(),
             supported_interfaces: vec![AgentInterface {
                 url: "http://localhost:8080/a2a".to_string(),
-                transport: "JSONRPC".to_string(),
+                protocol_binding: "JSONRPC".to_string(),
                 tenant: None,
                 protocol_version: Some("0.3".to_string()),
             }],
@@ -2088,8 +2165,8 @@ mod tests {
         let json = serde_json::to_value(&card).unwrap();
         assert_eq!(json["name"], "Test Agent");
         assert_eq!(json["url"], "http://localhost:8080/a2a");
-        // Python SDK: uses "transport" not "protocolBinding"
-        assert_eq!(json["supportedInterfaces"][0]["transport"], "JSONRPC");
+        // Spec v0.3.0: uses "protocolBinding"
+        assert_eq!(json["supportedInterfaces"][0]["protocolBinding"], "JSONRPC");
         assert_eq!(json["capabilities"]["streaming"], true);
         assert_eq!(json["skills"][0]["id"], "code");
     }
@@ -2708,42 +2785,49 @@ mod tests {
         assert_eq!(json["type"], "apiKey");
     }
 
-    // --- AgentInterface uses "transport" ---
+    // --- AgentInterface uses "protocolBinding" (spec v0.3.0) ---
 
     #[test]
-    fn agent_interface_transport_field() {
+    fn agent_interface_protocol_binding_field() {
         let iface = AgentInterface {
             url: "https://example.com/a2a".to_string(),
-            transport: "JSONRPC".to_string(),
+            protocol_binding: "JSONRPC".to_string(),
             tenant: None,
             protocol_version: Some("0.3".to_string()),
         };
         let json = serde_json::to_value(&iface).unwrap();
 
-        // Python SDK: uses "transport", not "protocolBinding"
-        assert_eq!(json["transport"], "JSONRPC");
-        assert!(
-            json.get("protocolBinding").is_none(),
-            "Must not use 'protocolBinding' field name"
-        );
-        // Tenant is None so should be absent
+        // Spec v0.3.0: uses "protocolBinding"
+        assert_eq!(json["protocolBinding"], "JSONRPC");
         assert!(json.get("tenant").is_none());
 
         let decoded: AgentInterface = serde_json::from_value(json).unwrap();
-        assert_eq!(decoded.transport, "JSONRPC");
+        assert_eq!(decoded.protocol_binding, "JSONRPC");
+    }
+
+    #[test]
+    fn agent_interface_accepts_transport_alias() {
+        // Python SDK sends "transport" — we should still accept it
+        let json = serde_json::json!({
+            "url": "https://example.com/a2a",
+            "transport": "JSONRPC",
+            "protocolVersion": "0.3"
+        });
+        let decoded: AgentInterface = serde_json::from_value(json).unwrap();
+        assert_eq!(decoded.protocol_binding, "JSONRPC");
     }
 
     #[test]
     fn agent_interface_with_tenant() {
         let iface = AgentInterface {
             url: "https://example.com/a2a".to_string(),
-            transport: "GRPC".to_string(),
+            protocol_binding: "GRPC".to_string(),
             tenant: Some("my-tenant".to_string()),
             protocol_version: Some("0.3".to_string()),
         };
         let json = serde_json::to_value(&iface).unwrap();
 
-        assert_eq!(json["transport"], "GRPC");
+        assert_eq!(json["protocolBinding"], "GRPC");
         assert_eq!(json["tenant"], "my-tenant");
 
         let decoded: AgentInterface = serde_json::from_value(json).unwrap();
