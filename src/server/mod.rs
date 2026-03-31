@@ -55,6 +55,7 @@
 pub mod agent_executor;
 pub mod axum_integration;
 pub mod event_queue;
+pub mod file_task_store;
 pub mod request_handler;
 pub mod task_manager;
 pub mod task_store;
@@ -75,5 +76,6 @@ pub use request_handler::{
     SendMessageConfiguration, SendMessageParams, SubscribeToTaskParams,
 };
 pub use task_manager::{append_artifact_to_task, TaskEvent, TaskManager};
+pub use file_task_store::FileTaskStore;
 pub use task_store::{InMemoryTaskStore, TaskListParams, TaskListResponse, TaskStore};
 pub use task_updater::TaskUpdater;
